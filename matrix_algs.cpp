@@ -1,4 +1,5 @@
 #include "matrix_algs.h"
+#include "normalization_algs.h"
 
 
 vector<vector<double>> initialize_new_rep(const vector<vector<int>>& dm1, 
@@ -33,10 +34,57 @@ vector<vector<double>> matrix_mult_self(const vector<vector<double>>& matrix){
         for (int j = 0; j < n; j++) {
             for (int k = 0; k < n; k++) {
                 result[i][j] += matrix[i][k] * matrix[k][j];
-            }  
+            } 
         }
     }
 
     return result;
+}
 
+// uses normalization algs to add zero newly-found cost paths to zero_costs
+void check_and_add_zero_cost_paths(const vector<vector<double>>& matrix, vector<vector<int>>& zero_costs) {
+    int n = matrix.size();
+    for (int i=0; i < n; i++) {
+        for (int j=0; j < n; j++) {
+            if (detect_zero_edge(matrix[i][j], n)) zero_costs[i][j] = 0;
+        }
+    }
+}
+
+// uses normalization algs to add zero newly-found cost paths to zero_costs
+void check_and_add_pos_one_cost_paths(const vector<vector<double>>& matrix, vector<vector<int>>& pos_one_costs) {
+    int n = matrix.size();
+    for (int i=0; i < n; i++) {
+        for (int j=0; j < n; j++) {
+            if (detect_positive_one_edge(matrix[i][j], n)) pos_one_costs[i][j] = 1;
+        }
+    }
+}
+
+// uses normalization algs to add zero newly-found cost paths to zero_costs
+void check_and_add_neg_one_cost_paths(const vector<vector<double>>& matrix, vector<vector<int>>& neg_one_costs) {
+    int n = matrix.size();
+    for (int i=0; i < n; i++) {
+        for (int j=0; j < n; j++) {
+            if (detect_negative_one_edge(matrix[i][j], n)) neg_one_costs[i][j] = -1;
+        }
+    }
+}
+
+void check_and_add_all_discovered_paths(const vector<vector<double>>& matrix,
+                                        vector<vector<int>>& zero_costs,
+                                        vector<vector<int>>& pos_one_costs,
+                                        vector<vector<int>>& neg_one_costs) {
+    check_and_add_zero_cost_paths(matrix, zero_costs);
+    check_and_add_pos_one_cost_paths(matrix, pos_one_costs);
+    check_and_add_neg_one_cost_paths(matrix, neg_one_costs);
+}
+
+void fill_with_infinity(vector<vector<int>> &matrix) {
+    int n = matrix.size();
+    for (int i=0; i < n; i++) {
+        for (int j=0; j<n; j++) {
+            matrix[i][j] = 2;
+        }
+    }
 }
