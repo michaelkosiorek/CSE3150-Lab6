@@ -37,7 +37,7 @@ TEST_CASE("new matrix algs") {
         CHECK_EQ(empty_matrix, expected);
     };
 
-    SUBCASE("initialization-alg") {
+    SUBCASE("initialization alg") {
         std::ifstream d_min_1_stream;
         d_min_1_stream.open("graph_m1.txt");
 
@@ -57,6 +57,8 @@ TEST_CASE("new matrix algs") {
                                                    {0, 0, 0, 15}, 
                                                    {15, 0, 0, 0}};
         int n = new_rep.size();
+        // check to see if all elements are within .001 of our expected result
+        // that was provided in the pdf
         for (int i=0; i < n; i++) {
             for (int j=0; j < n; j++) {
                 CHECK(new_rep[i][j] < expected_new_rep[i][j] + .001);
@@ -64,6 +66,77 @@ TEST_CASE("new matrix algs") {
             }
         }
 
+    };
+
+    SUBCASE("normalization algs") {
+        CHECK(detect_positive_one_edge(15.0, 4)); // an edge cost of 15 with n=4 should be TRUE
+        CHECK(detect_zero_edge(1, 4)); // 1 should indicate a zero edge
+        CHECK(detect_negative_one_edge(.066667, 4)); // 1/15 should indicate a -1 edge
+
+        CHECK_FALSE(detect_positive_one_edge(.066667, 4)); // should indicate a - edge, not +
+        CHECK_FALSE(detect_zero_edge(0, 4)); // 0 shouldnt trigger, not close enough
+        CHECK_FALSE(detect_negative_one_edge(15.0, 4)); // should indicate +, not - 
+        CHECK_FALSE(detect_positive_one_edge(0.0, 4)); // 0 is close to these small fractions but shouldnt trigger
+    };
+
+    SUBCASE("check for zero-solutions") {
+        vector<vector<double>> new_rep = {{0.06667, 15, 0, 0}, 
+                                          {0, 0, 15, 0}, 
+                                          {0, 0, 0, 15}, 
+                                          {15, 0, 0, 0}};
+        new_rep = matrix_mult_self(new_rep);
+        // this new AxA matrix should indicate that there
+        // is a zero-cost path from 4->1 and from 1->2
+        vector<vector<int>> expected_zero_paths = {{2, 0, 2, 2},
+                                                   {2, 2, 2, 2},
+                                                   {2, 2, 2, 2},
+                                                   {0, 2, 2, 2}};
+        vector<vector<int>> actual_zero_paths = {{2, 2, 2, 2},
+                                                 {2, 2, 2, 2},
+                                                 {2, 2, 2, 2},
+                                                 {2, 2, 2, 2}};;
+        check_and_add_zero_cost_paths(new_rep, actual_zero_paths);
+        CHECK_EQ(actual_zero_paths, expected_zero_paths);
+    };
+
+    SUBCASE("check for pos-one-solutions") {
+        vector<vector<double>> new_rep = {{0.06667, 15, 0, 0}, 
+                                          {0, 0, 15, 0}, 
+                                          {0, 0, 0, 15}, 
+                                          {15, 0, 0, 0}};
+        // the new representation should be able to immediately
+        // detect the 4 pos-one cost paths
+        vector<vector<int>> expected_pos_one_paths = {{2, 1, 2, 2},
+                                                      {2, 2, 1, 2},
+                                                      {2, 2, 2, 1},
+                                                      {1, 2, 2, 2}};
+        vector<vector<int>> actual_pos_one_paths = {{2, 2, 2, 2},
+                                                    {2, 2, 2, 2},
+                                                    {2, 2, 2, 2},
+                                                    {2, 2, 2, 2}};
+        check_and_add_pos_one_cost_paths(new_rep, actual_pos_one_paths);
+        CHECK_EQ(actual_pos_one_paths, expected_pos_one_paths);
+
+        //print_discovered_paths(actual_pos_one_paths, actual_pos_one_paths, actual_pos_one_paths);
+    }
+
+    SUBCASE("check for neg-one-solutions") {
+        vector<vector<double>> new_rep = {{0.06667, 15, 0, 0}, 
+                                          {0, 0, 15, 0}, 
+                                          {0, 0, 0, 15}, 
+                                          {15, 0, 0, 0}};
+        // the new representation should be able to immediately
+        // detect the 4 neg-one cost paths
+        vector<vector<int>> expected_neg_one_paths = {{-1, 2, 2, 2},
+                                                      {2, 2, 2, 2},
+                                                      {2, 2, 2, 2},
+                                                      {2, 2, 2, 2}};
+        vector<vector<int>> actual_neg_one_paths = {{2, 2, 2, 2},
+                                                    {2, 2, 2, 2},
+                                                    {2, 2, 2, 2},
+                                                    {2, 2, 2, 2}};
+        check_and_add_neg_one_cost_paths(new_rep, actual_neg_one_paths);
+        CHECK_EQ(actual_neg_one_paths, expected_neg_one_paths);
     };
 
 }
